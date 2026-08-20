@@ -32,10 +32,8 @@ int main() {
     }
     // Make this window the primary one we are drawing to
     glfwMakeContextCurrent(window);
-    // Enable vsync (locks framerate to your monitor's refresh rate)
     glfwSwapInterval(1);
 
-    // Initialize ImGui Context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
 
@@ -61,12 +59,82 @@ int main() {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // 3. --- THIS IS WHERE WE BUILD OUR UI ---
-        // We call ImGui::ShowDemoWindow() for now. It generates a massive window
-        // showing every single button, table, and feature ImGui has.
-        ImGui::ShowDemoWindow();
+        ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(ImVec2(1280, 720), ImGuiCond_FirstUseEver);
+        ImGui::Begin("Wire Sniffer Network Analyser", nullptr, ImGuiWindowFlags_NoCollapse);
 
-        // 4. Render the UI to memory
+
+        ImGui::BeginChild("PacketListPane", ImVec2(0, ImGui::GetWindowHeight() * 0.5f), true);
+
+        if (ImGui::BeginTable("PacketTable", 7, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable)) {
+            ImGui::TableSetupColumn("No.");
+            ImGui::TableSetupColumn("Time");
+            ImGui::TableSetupColumn("Source");
+            ImGui::TableSetupColumn("Destination");
+            ImGui::TableSetupColumn("Protocol");
+            ImGui::TableSetupColumn("Length");
+            ImGui::TableSetupColumn("Info");
+            ImGui::TableHeadersRow();
+
+            std::lock_guard<std::mutex> lock(g_packetMutex);
+
+
+            for (const auto& packet : g_packetList) {
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::Text("%d", packet.id);
+                ImGui::TableSetColumnIndex(1);
+                ImGui::Text("%s", packet.time.c_str());
+                ImGui::TableSetColumnIndex(2);
+                ImGui::Text("%s", packet.source.c_str());
+                ImGui::TableSetColumnIndex(3);
+                ImGui::Text("%s", packet.destination.c_str());
+                ImGui::TableSetColumnIndex(4);
+                ImGui::Text("%s", packet.protocol.c_str());
+                ImGui::TableSetColumnIndex(5);
+                ImGui::Text("%d", packet.length);
+                ImGui::TableSetColumnIndex(6);
+                ImGui::Text("%s", packet.info.c_str());
+            }
+            ImGui::EndTable();
+        }
+        ImGui::EndChild();
+
+        ImGui::Columns(2, "BottomPanes");
+
+        ImGui::BeginChild("DetailsPane", ImVec2(0,0), true);
+        ImGui::Text("Packet Details");
+        ImGui::Separator();
+
+        if (ImGui::TreeNode("Frame 1: 64 bytes on wire")) {
+            ImGui::Text("Arrival Time: Aug 20");
+            ImGui::TreePop();
+        }
+
+        if (ImGui::TreeNode("Ethernet II, Src: 00:11:22:33, Dst: 44:55:66:77")) {
+            ImGui::Text("Destination: 44:55:66:77");
+            ImGui::Text("Source: 00:11:22:33");
+            ImGui::TreePop();
+        }
+
+        ImGui::EndChild();
+        ImGui::NextColumn();
+
+
+        ImGui::BeginChild("HexDumpPane", ImVec2(0, 0), true);
+        ImGui::Text("Raw Hex Dump");
+        ImGui::Separator();
+
+        ImGui::Text("0000 44 45 55 44 66 77 23 00 11 22 33 08 67");
+        ImGui::Text("0010 a2 01 43 c4 34 b1 22 67 67 67 22 99 10");
+        ImGui::EndChild();
+
+        ImGui::Columns(1);
+        ImGui::End();
+
+
+
+
         ImGui::Render();
 
         // 5. Clear the OS window background to a solid color (dark grey)
@@ -76,15 +144,9 @@ int main() {
         // 6. Draw the ImGui memory to the OpenGL window
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-        // 7. Swap the buffers (Display the newly drawn frame on the monitor)
         glfwSwapBuffers(window);
     }
 
-    // ========================================================================
-    // PHASE 3: CLEANUP
-    // ========================================================================
-
-    // Safely shut down all the graphics subsystems to prevent memory leaks
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
