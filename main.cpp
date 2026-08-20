@@ -1,60 +1,119 @@
 #include <iostream>
-// Include GLFW for window creation
 #include <GLFW/glfw3.h>
-// Include ImGui core and backend headers
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include "pcap.h"
+
+#include <vector>
+#include  <string>
+#include <mutex>
+#include <thread>
+#include <chrono>
+
+
+struct CapturedPacket {
+    int id;
+    std::string time;
+    std::string source;
+    std::string destination;
+    std::string protocol;
+    int length;
+    std::string info;
+};
+
+
+
+
+std::vector<CapturedPacket> g_packetList;
+
+std::mutex g_packetMutex;
+
+
+
+
+
+int g_packetCount = 1;
+
+void packetHandler(u_char *userDta, const struct pcap_pkthdr *pkthdr, const u_char *packet) {
+    CapturedPacket newPacket;
+    newPacket.id = g_packetCount++;
+    newPacket.time = "Live";
+    newPacket.source = "Unknown";
+    newPacket.destination = "Unknown";
+    newPacket.protocol = "ETH";
+    newPacket.length = pkthdr->len;
+    newPacket.info = "Raw Frame Captured";
+
+    std::lock_guard<std::mutex> lock(g_packetMutex);
+    g_packetList.push_back(newPacket);
+
+}
+
+
+
+bool g_isCapturing =  true;
+
+void CaptureThreadFunc() {
+   char errbuf[PCAP_ERRBUF_SIZE];
+
+    pcap_t *handle =  pcap_open_live("en0", 65535, 1, 100, errbuf);
+
+    if (handle == nullptr) {
+        std::cerr << "Could not open device: "<<errbuf<<std::endl;
+        std::cerr<<"Running with sudo??"<<std::endl;
+        return;
+    }
+
+    while (g_isCapturing) {
+        pcap_dispatch(handle , 10, packetHandler, nullptr);
+
+    }
+
+    pcap_close(handle);
+
+}
+
+
+
 
 int main() {
-    // ========================================================================
-    // PHASE 1: INITIALIZATION
-    // ========================================================================
 
-    // 1. Initialize GLFW. If it fails, the OS graphics can't be used.
     if (!glfwInit()) {
         std::cerr << "Failed to initialize GLFW" << std::endl;
         return -1;
     }
 
-    // Tell GLFW we want to use OpenGL 3.2 (Standard for macOS)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // Required on Mac
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-    // Create the actual OS window (Width, Height, Title)
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "Wire Sniffer v0.1", nullptr, nullptr);
+
+    GLFWwindow* window = glfwCreateWindow(1280, 720, "Wire Sniffer", nullptr, nullptr);
     if (!window) {
         std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
         return -1;
     }
-    // Make this window the primary one we are drawing to
+
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
 
-    // Setup ImGui to use dark mode (perfect for hacker tools)
     ImGui::StyleColorsDark();
 
-    // Bind ImGui to our GLFW window and OpenGL pipeline
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 150");
 
-    // ========================================================================
-    // PHASE 2: THE MAIN RENDER LOOP (Runs 60 frames per second)
-    // ========================================================================
 
-    // Keep looping until the user clicks the close button on the window
+    std::thread captureThread(CaptureThreadFunc);
     while (!glfwWindowShouldClose(window)) {
 
-        // 1. Listen for OS events (mouse clicks, keyboard presses, window resizing)
         glfwPollEvents();
 
-        // 2. Tell ImGui a new frame is starting
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
@@ -137,11 +196,9 @@ int main() {
 
         ImGui::Render();
 
-        // 5. Clear the OS window background to a solid color (dark grey)
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // 6. Draw the ImGui memory to the OpenGL window
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(window);
@@ -152,6 +209,13 @@ int main() {
     ImGui::DestroyContext();
     glfwDestroyWindow(window);
     glfwTerminate();
+
+
+    g_isCapturing = false;
+    if (captureThread.joinable()) {
+        captureThread.join();
+    }
+
 
     return 0;
 }
