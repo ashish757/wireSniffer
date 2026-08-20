@@ -1,8 +1,7 @@
-cmake_minimum_required(VERSION 4.0)
+cmake_minimum_required(VERSION 3.20)
 project(wireSniffer)
 
 set(CMAKE_CXX_STANDARD 20)
-
 
 include(FetchContent)
 FetchContent_Declare(
@@ -13,7 +12,8 @@ FetchContent_Declare(
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(imgui)
+FetchContent_MakeAvailable(glfw)
+
 
 FetchContent_Declare(
         imgui
@@ -22,9 +22,8 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(imgui)
 
-
-add_executable(
-        WireSniffer main.cpp
+add_executable(wireSniffer
+        main.cpp
         ${imgui_SOURCE_DIR}/imgui.cpp
         ${imgui_SOURCE_DIR}/imgui_demo.cpp
         ${imgui_SOURCE_DIR}/imgui_draw.cpp
@@ -34,10 +33,9 @@ add_executable(
         ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
 )
 
-target_include_directories(WireSniffer PRIVATE
+target_include_directories(wireSniffer PRIVATE
         ${imgui_SOURCE_DIR}
         ${imgui_SOURCE_DIR}/backends
 )
 
-target_link_libraries(WireSniffer PRIVATE glfw pcap "-framework OpenGL")
-
+target_link_libraries(wireSniffer PRIVATE glfw pcap "-framework OpenGL")
