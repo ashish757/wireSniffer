@@ -22,3 +22,17 @@ i have setup basic project
 
 > next, i would like to make ui more responsive and display more information about the packets and network
 ![img.png](img.png)
+
+
+# Devlog 3
+These low level languages, they are fucking scary. I spent my like 90% of time debugging and understanding the theory behind this networks and specifically how libcap handles them, then writing actual code.  banging my head to AI to explain me these things.
+
+## Heres what i got
+- first of all i did a quick revison of pointer stuff as the libcap is usign that heavily
+- Theres one thing i dont understand completely which is `#pragma pack(push, 1)` it is some deep memory thing, i read about it but did note really understand this, got AI help here
+- used pointer arithmatics to extract the details of packet
+- Also i found some cool things like big-endian and little endian, won't talk much about this, but i guess i feel like a network engineer already
+
+### Well if you did not read the stuff above, Here's the cool thing in one line Right now, the UI properly displays IP addresses, exact ports, and connection details.
+
+> I don't know what I'm gonna do next because it was a lot of time and researching and learning in last session so probably I will take a break and after that i wil just look into what else is there, i  guess there is a lot of still remaining network can't be easy, but let's see.
