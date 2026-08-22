@@ -22,6 +22,7 @@ struct CapturedPacket {
     std::string protocol;
     int length;
     std::string info;
+    std::vector<uint8_t> rawData;
 };
 
 

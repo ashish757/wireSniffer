@@ -40,6 +40,8 @@ int main() {
 
 
     std::thread captureThread(CaptureThreadFunc);
+    int selectedPacketId = -1;
+    CapturedPacket selectedPacketData;
     while (!glfwWindowShouldClose(window)) {
 
         glfwPollEvents();
@@ -71,7 +73,14 @@ int main() {
             for (const auto& packet : g_packetList) {
                 ImGui::TableNextRow();
                 ImGui::TableSetColumnIndex(0);
-                ImGui::Text("%d", packet.id);
+
+                char label[32];
+                snprintf(label, sizeof(label), "%d", packet.id);
+                if (ImGui::Selectable(label, selectedPacketId == packet.id, ImGuiSelectableFlags_SpanAllColumns)) {
+                    selectedPacketId = packet.id;
+                    selectedPacketData = packet;
+                }
+
                 ImGui::TableSetColumnIndex(1);
                 ImGui::Text("%s", packet.time.c_str());
                 ImGui::TableSetColumnIndex(2);
@@ -91,31 +100,41 @@ int main() {
 
         ImGui::Columns(2, "BottomPanes");
 
-        ImGui::BeginChild("DetailsPane", ImVec2(0,0), true);
-        ImGui::Text("Packet Details");
-        ImGui::Separator();
-
-        if (ImGui::TreeNode("Frame 1: 64 bytes on wire")) {
-            ImGui::Text("Arrival Time: Aug 20");
-            ImGui::TreePop();
-        }
-
-        if (ImGui::TreeNode("Ethernet II, Src: 00:11:22:33, Dst: 44:55:66:77")) {
-            ImGui::Text("Destination: 44:55:66:77");
-            ImGui::Text("Source: 00:11:22:33");
-            ImGui::TreePop();
-        }
-
-        ImGui::EndChild();
-        ImGui::NextColumn();
-
-
-        ImGui::BeginChild("HexDumpPane", ImVec2(0, 0), true);
+        ImGui::BeginChild("HexDumpPane");
         ImGui::Text("Raw Hex Dump");
         ImGui::Separator();
 
-        ImGui::Text("0000 44 45 55 44 66 77 23 00 11 22 33 08 67");
-        ImGui::Text("0010 a2 01 43 c4 34 b1 22 67 67 67 22 99 10");
+        if (selectedPacketId != -1) {
+            const auto& data = selectedPacketData.rawData;
+
+            for (size_t i  =0; i<data.size(); i += 16) {
+                ImGui::Text("%04zx ", i);
+                ImGui::SameLine();
+
+
+                for (size_t j  =0; j<16; j++) {
+                    if (i + j < data.size()) {
+                        ImGui::Text("%02x ", data[i + j]);
+                    } else {
+                        ImGui::Text(" ");
+                    }
+                    ImGui::SameLine();
+                }
+
+            ImGui::Text(" ");
+            ImGui::SameLine();
+
+            std::string asciiStr = " ";
+            for (size_t j = 0; j<16 && (i+j) < data.size(); j++) {
+                char c = data[i+j];
+                asciiStr += (c >= 32 && c <= 126) ? c : '.';
+            }
+                ImGui::Text("%s", asciiStr.c_str());
+            }
+        } else {
+            ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "Select a packet to view hex dump");
+        }
+
         ImGui::EndChild();
 
         ImGui::Columns(1);

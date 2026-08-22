@@ -73,6 +73,8 @@ void packetHandler(u_char *userDta, const struct pcap_pkthdr *pkthdr, const u_ch
         newPacket.info = "Unknown / Non-IPv4 Frame";
     }
 
+    newPacket.rawData.assign(packet, packet + pkthdr->caplen);
+
     std::lock_guard<std::mutex> lock(g_packetMutex);
     g_packetList.push_back(newPacket);
 }
