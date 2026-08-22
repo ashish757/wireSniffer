@@ -36,3 +36,16 @@ These low level languages, they are fucking scary. I spent my like 90% of time d
 ### Well if you did not read the stuff above, Here's the cool thing in one line Right now, the UI properly displays IP addresses, exact ports, and connection details.
 
 > I don't know what I'm gonna do next because it was a lot of time and researching and learning in last session so probably I will take a break and after that i wil just look into what else is there, i  guess there is a lot of still remaining network can't be easy, but let's see.
+
+
+# Devlog 4
+
+- refactored main.cpp to separate types in headers files CaptureHaeader.h and CaptureEngine.cpp,
+### Hex Dump
+- Heres the cool thing, now i display the hex dump as well
+- it loops through the raw byte vector of the selected packet and prints it in the classic 16-byte offset format
+
+
+- till now the UI and Logic were coupled together, i just seperated them in UIManger.h and UIManager.cpp file
+> NEXT TARGET --> improve the UI and some network exploitation thing
+![img_1.png](img_1.png)

@@ -24,6 +24,7 @@ FetchContent_MakeAvailable(imgui)
 
 add_executable(wireSniffer
         src/main.cpp
+        src/CaptureEngine.cpp
         ${imgui_SOURCE_DIR}/imgui.cpp
         ${imgui_SOURCE_DIR}/imgui_demo.cpp
         ${imgui_SOURCE_DIR}/imgui_draw.cpp
@@ -33,7 +34,8 @@ add_executable(wireSniffer
         ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
         include/ProtocolHeaders.h
         include/CaptureHeader.h
-        src/CaptureEngine.cpp
+        include/UImanager.h
+        src/UIManager.cpp
 )
 
 target_include_directories(wireSniffer PRIVATE
