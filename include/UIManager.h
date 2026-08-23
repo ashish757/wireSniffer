@@ -13,6 +13,7 @@ public:
     void Render();
 
 private:
+    float packetListHeight = 350.0f;
     void DrawPacketList();
     void DrawDetailsPane();
     void DrawHexDumpPane();

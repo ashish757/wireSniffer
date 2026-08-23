@@ -10,27 +10,60 @@
 
 
 void UIManager::Render() {
-    ImGui::SetNextWindowPos(ImVec2(0,0), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(ImVec2(1280,720), ImGuiCond_FirstUseEver);
-    ImGui::Begin("Wire Sniffer Network Analyser", nullptr, ImGuiWindowFlags_NoCollapse);
 
-    DrawPacketList();
+    ImGuiIO& io = ImGui::GetIO();
 
-    ImGui::Columns(2, "BottomPanes");
-    DrawDetailsPane();
-    ImGui::NextColumn();
-    DrawHexDumpPane();
-    ImGui::Columns(1);
-    ImGui::End();
+    // io.Fonts->AddFontFromFileTTF("fonts/JetBrainsMono-Regular.ttf", 16.0f);
 
-    ImGui::Begin("Active Exploit Tools", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-    DrawInjectionPane();
+    ImGui::SetNextWindowPos(ImVec2(0.0f,0.0f));
+    ImGui::SetNextWindowSize(io.DisplaySize);
+
+    ImGui::StyleColorsLight();
+
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.WindowRounding = 0.0f;
+    style.FrameRounding = 2.0f;
+    style.ItemSpacing = ImVec2(8,8);
+
+    ImGuiWindowFlags windowFlags =
+            ImGuiWindowFlags_NoCollapse |
+            ImGuiWindowFlags_NoResize |
+            ImGuiWindowFlags_NoMove |
+            ImGuiWindowFlags_NoTitleBar |
+            ImGuiWindowFlags_NoBringToFrontOnFocus;
+
+    ImGui::Begin("Wire Sniffer Network Analyser", nullptr, windowFlags);
+
+    if (ImGui::BeginTabBar("MainTabs")) {
+        if (ImGui::BeginTabItem("Traffic Analyzer")) {
+            ImGui::BeginChild("PacketListPane", ImVec2(0, packetListHeight), true);
+            DrawPacketList();
+            ImGui::EndChild();
+
+            ImGui::InvisibleButton("v_splitter", ImVec2(-1, 8.0f));
+            if (ImGui::IsItemHovered()) ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+            if (ImGui::IsItemActive()) packetListHeight+=io.MouseDelta.y;
+
+
+            ImGui::Columns(2, "BottomPanes");
+            DrawDetailsPane();
+            ImGui::NextColumn();
+            DrawHexDumpPane();
+            ImGui::Columns(1);
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("Active Tools")) {
+            DrawInjectionPane();
+            ImGui::EndTabItem();
+        }
+        ImGui::EndTabBar();
+    }
+
     ImGui::End();
 }
 
 
 void UIManager::DrawPacketList() {
-    ImGui::BeginChild("PacketListPane", ImVec2(0, ImGui::GetWindowHeight() * 0.5f), true);
 
     if (ImGui::BeginTable("PacketTable", 7, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable)) {
         ImGui::TableSetupColumn("No.");
@@ -70,7 +103,6 @@ void UIManager::DrawPacketList() {
         }
         ImGui::EndTable();
     }
-    ImGui::EndChild();
 }
 
 
@@ -168,7 +200,7 @@ void UIManager::DrawInjectionPane() {
 
             ARPFrame frame = buildFrame(ethernet, arp);
 
-            injectionStatus = "Frane Built Successfully in memory (" + std::to_string(frame.size()) + "bytres)");
+            injectionStatus = "Frane Built Successfully in memory (" + std::to_string(frame.size()) + "bytes)";
         }
     }
     if (!injectionStatus.empty()) {
