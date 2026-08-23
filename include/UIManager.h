@@ -5,7 +5,8 @@
 #ifndef WIRESNIFFER_UIMANAGER_H
 #define WIRESNIFFER_UIMANAGER_H
 #include "CaptureHeader.h"
-
+#include "InjectionEngine.h"
+#include "cstring"
 
 class UIManager {
 public:
@@ -15,17 +16,16 @@ private:
     void DrawPacketList();
     void DrawDetailsPane();
     void DrawHexDumpPane();
+    void DrawInjectionPane();
 
     int selectedPacketId = -1;
-
     CapturedPacket selectedPacketData;
 
+    char targetInBuffer[16] = "";
+    char routerIpBuffer[16] = "";
+    char attackerMacBuffer[16] = "";
+
+    std::string injectionStatus;
 };
 
 #endif //WIRESNIFFER_UIMANAGER_H
-
-
-/*
-
-
- */

@@ -36,6 +36,8 @@ add_executable(wireSniffer
         include/CaptureHeader.h
         include/UImanager.h
         src/UIManager.cpp
+        include/InjectionEngine.h
+        src/InjectionEngine.cpp
 )
 
 target_include_directories(wireSniffer PRIVATE

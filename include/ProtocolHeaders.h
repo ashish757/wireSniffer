@@ -49,6 +49,19 @@ struct UDPHeader {
     uint16_t checksum;
 };
 
+struct ARPHeader {
+    uint16_t hardware_type;
+    uint16_t protocol_type;
+    uint8_t hardware_len;
+    uint8_t protocol_len;
+    uint16_t opcode;
+    uint8_t sender_mac[6];
+    uint32_t sender_ip;
+    uint8_t target_mac[6];
+    uint32_t target_ip;
+
+};
+
 #pragma pack(pop)
 
 

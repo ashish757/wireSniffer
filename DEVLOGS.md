@@ -49,3 +49,18 @@ These low level languages, they are fucking scary. I spent my like 90% of time d
 - till now the UI and Logic were coupled together, i just seperated them in UIManger.h and UIManager.cpp file
 > NEXT TARGET --> improve the UI and some network exploitation thing
 ![img_1.png](img_1.png)
+
+
+
+# Devlog 5
+This tool is still not feeling like a nearly illeagal spy tool, so decided to add somethign to interfare with network
+
+## ARP Spoofer
+- Address Resolution Protocol (ARP) is the glue that binds IP addresses (Layer 3) to physical MAC addresses (Layer 2). When your phone wants to talk to the Wi-Fi router, it shouts out to the entire network: "Who has IP 192.168.1.1? Tell my MAC address."
+- The router replies: "I do, my MAC is AA:BB:CC..."
+- Because ARP was designed in the 1980s, it has zero authentication. If your Wire Sniffer blasts a fake reply to a victim's phone saying, "Hey, I am 192.168.1.1 (the router), my MAC is [Your Laptop's MAC]", the victim's phone will blindly believe it. It will instantly overwrite its internal routing table and start sending all its internet traffic to you instead of the actual router.
+
+# And here is OUR ARP SPOOFER
+- so basically we build a raw packet byte by byte and fire it with `pcap_inject()`
+
+- ok, so i failed to build this AR spoofer for now because it is way more complex than I thought it is as I don't have much time for this project, so I will be completing other features and I will come back to this feature if I have some time left

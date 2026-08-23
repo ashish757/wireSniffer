@@ -5,6 +5,8 @@
 #include "../include/UIManager.h"
 #include "imgui.h"
 #include "imgui_internal.h"
+#include <arpa/inet.h>
+#include <netinet/in.h>
 
 
 void UIManager::Render() {
@@ -19,7 +21,10 @@ void UIManager::Render() {
     ImGui::NextColumn();
     DrawHexDumpPane();
     ImGui::Columns(1);
+    ImGui::End();
 
+    ImGui::Begin("Active Exploit Tools", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+    DrawInjectionPane();
     ImGui::End();
 }
 
@@ -76,7 +81,7 @@ void UIManager::DrawDetailsPane() {
     ImGui::Separator();
 
     if (selectedPacketId != -1) {
-        ImGui::Text("Frane Length: %d bytes", selectedPacketData.length);
+        ImGui::Text("Frame Length: %d bytes", selectedPacketData.length);
         ImGui::Text("Captured on Interface: en0");
     } else {
         ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "Select a packet to view details");
@@ -121,4 +126,53 @@ void UIManager::DrawHexDumpPane() {
     }
     ImGui::EndChild();
 
+}
+
+
+void UIManager::DrawInjectionPane() {
+    ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "ARP Spoofing Engine");
+    ImGui::Separator();
+    ImGui::Spacing();
+    ImGui::InputText("Target IP (victim)", targetInBuffer, sizeof(targetInBuffer));
+    ImGui::InputText("Router IP (gateway", routerIpBuffer, sizeof(routerIpBuffer));
+    ImGui::InputText("Attacker MAC (you)", attackerMacBuffer, sizeof(attackerMacBuffer));
+
+    if (ImGui::Button("Build & Fire", ImVec2(-1, 30))) {
+        struct in_addr targetAddr{};
+        struct in_addr routerAddr{};
+
+        bool targetValid = inet_pton(AF_INET, targetInBuffer, &targetAddr) == 1;
+        bool routerValid = inet_pton(AF_INET, routerIpBuffer, &routerAddr) == 1;
+
+        if (!targetValid || !routerValid) {
+            injectionStatus = "Invalid IPv4 Address";
+        } else {
+            EthernetHeader ethernet{};
+            ARPHeader arp{};
+
+            std::memset(ethernet.dest, 0xff, 6);
+            std::memset(ethernet.src, 0, 6);
+            ethernet.type = htons(0x0806);
+
+            arp.hardware_type = htons(1);
+            arp.protocol_type = htons(0x0800);
+            arp.hardware_len = 6;
+            arp.protocol_len  = 4;
+            arp.opcode = htons(2);
+
+            std::memset(arp.sender_mac, 0, 6);
+            arp.sender_ip = routerAddr.s_addr;
+
+            std::memset(arp.target_mac, 0, 6);
+            arp.target_ip = targetAddr.s_addr;
+
+            ARPFrame frame = buildFrame(ethernet, arp);
+
+            injectionStatus = "Frane Built Successfully in memory (" + std::to_string(frame.size()) + "bytres)");
+        }
+    }
+    if (!injectionStatus.empty()) {
+        ImGui::Separator();
+        ImGui::TextWrapped("Status: %s", injectionStatus.c_str());
+    }
 }

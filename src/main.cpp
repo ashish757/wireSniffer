@@ -64,8 +64,6 @@ int main() {
         glfwSwapBuffers(window);
     }
 
-    int selectedPacketId = -1;
-    CapturedPacket selectedPacketData;
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
