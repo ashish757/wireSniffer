@@ -62,6 +62,15 @@ struct ARPHeader {
 
 };
 
+struct DNSHeader {
+    uint16_t transaction_id;
+    uint16_t flags;
+    uint16_t answer_rrs;
+    uint16_t questions;
+    uint16_t authority_rrs;
+    uint16_t additional_rrs;
+};
+
 #pragma pack(pop)
 
 

@@ -10,12 +10,9 @@
 
 
 void UIManager::Render() {
-
     ImGuiIO& io = ImGui::GetIO();
 
-    // io.Fonts->AddFontFromFileTTF("fonts/JetBrainsMono-Regular.ttf", 16.0f);
-
-    ImGui::SetNextWindowPos(ImVec2(0.0f,0.0f));
+    ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
     ImGui::SetNextWindowSize(io.DisplaySize);
 
     ImGui::StyleColorsLight();
@@ -23,7 +20,7 @@ void UIManager::Render() {
     ImGuiStyle& style = ImGui::GetStyle();
     style.WindowRounding = 0.0f;
     style.FrameRounding = 2.0f;
-    style.ItemSpacing = ImVec2(8,8);
+    style.ItemSpacing = ImVec2(8, 8);
 
     ImGuiWindowFlags windowFlags =
             ImGuiWindowFlags_NoCollapse |
@@ -35,27 +32,47 @@ void UIManager::Render() {
     ImGui::Begin("Wire Sniffer Network Analyser", nullptr, windowFlags);
 
     if (ImGui::BeginTabBar("MainTabs")) {
+
+
+
         if (ImGui::BeginTabItem("Traffic Analyzer")) {
+
+            const char* filterOptions[] = {"All", "DNS", "TCP", "UDP", "ARP"};
+            ImGui::SetNextItemWidth(120.0f);
+            if (ImGui::Combo("###ProtocolCombo", &seletedFilterIndex, filterOptions, IM_ARRAYSIZE(filterOptions))) {
+                if (seletedFilterIndex == 0) filterBuffer[0] = '\0';
+                else if (seletedFilterIndex == 1) snprintf(filterBuffer, sizeof(filterBuffer), "DNS");
+                else if (seletedFilterIndex == 2) snprintf(filterBuffer, sizeof(filterBuffer), "TCP");
+                else if (seletedFilterIndex == 3) snprintf(filterBuffer, sizeof(filterBuffer), "UDP");
+                else if (seletedFilterIndex == 4) snprintf(filterBuffer, sizeof(filterBuffer), "ARP");
+            }
+            ImGui::SameLine();
+
+            ImGui::SetNextItemWidth(-1);
+            ImGui::InputTextWithHint("##Filter", "Filter packets (e.g., DNS, IPv4, 192.168, Google)...", filterBuffer, sizeof(filterBuffer));
+            ImGui::Spacing();
             ImGui::BeginChild("PacketListPane", ImVec2(0, packetListHeight), true);
             DrawPacketList();
             ImGui::EndChild();
 
             ImGui::InvisibleButton("v_splitter", ImVec2(-1, 8.0f));
             if (ImGui::IsItemHovered()) ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
-            if (ImGui::IsItemActive()) packetListHeight+=io.MouseDelta.y;
-
+            if (ImGui::IsItemActive()) packetListHeight += io.MouseDelta.y;
 
             ImGui::Columns(2, "BottomPanes");
             DrawDetailsPane();
             ImGui::NextColumn();
             DrawHexDumpPane();
             ImGui::Columns(1);
+
             ImGui::EndTabItem();
         }
+
         if (ImGui::BeginTabItem("Active Tools")) {
             DrawInjectionPane();
             ImGui::EndTabItem();
         }
+
         ImGui::EndTabBar();
     }
 
@@ -64,12 +81,12 @@ void UIManager::Render() {
 
 
 void UIManager::DrawPacketList() {
+    if (ImGui::BeginTable("PacketTable", 7, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollY, ImVec2(0.0f, 0.0f))) {
 
-    if (ImGui::BeginTable("PacketTable", 7, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable)) {
+        ImGui::TableSetupScrollFreeze(0, 1);
         ImGui::TableSetupColumn("No.");
         ImGui::TableSetupColumn("Time");
         ImGui::TableSetupColumn("Source");
-
         ImGui::TableSetupColumn("Destination");
         ImGui::TableSetupColumn("Protocol");
         ImGui::TableSetupColumn("Length");
@@ -77,7 +94,25 @@ void UIManager::DrawPacketList() {
         ImGui::TableHeadersRow();
 
         std::lock_guard<std::mutex> lock(g_packetMutex);
+        std::string filterStr = filterBuffer;
+
         for (const auto& packet: g_packetList) {
+
+            if (!filterStr.empty()) {
+                bool match = false;
+
+                if (packet.protocol.find(filterStr) != std::string::npos ||
+                    packet.source.find(filterStr) != std::string::npos ||
+                    packet.destination.find(filterStr) != std::string::npos ||
+                    packet.info.find(filterStr) != std::string::npos) {
+                    match = true;
+                }
+
+                if (!match) {
+                    continue;
+                }
+            }
+
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
 
@@ -104,7 +139,6 @@ void UIManager::DrawPacketList() {
         ImGui::EndTable();
     }
 }
-
 
 
 void UIManager::DrawDetailsPane() {

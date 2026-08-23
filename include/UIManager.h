@@ -19,7 +19,7 @@ private:
     void DrawHexDumpPane();
     void DrawInjectionPane();
 
-    int selectedPacketId = -1;
+    int sele?/ctedPacketId = -1;
     CapturedPacket selectedPacketData;
 
     char targetInBuffer[16] = "";
@@ -27,6 +27,8 @@ private:
     char attackerMacBuffer[16] = "";
 
     std::string injectionStatus;
+    char filterBuffer[256] = "";
+    int seletedFilterIndex = 0;
 };
 
 #endif //WIRESNIFFER_UIMANAGER_H

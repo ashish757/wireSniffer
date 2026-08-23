@@ -58,9 +58,40 @@ void packetHandler(u_char *userDta, const struct pcap_pkthdr *pkthdr, const u_ch
             uint16_t src_port = ntohs(udo->src_port);
             uint16_t dest_port = ntohs(udo->dest_port);
 
-            char infoStr[64];
-            snprintf(infoStr, sizeof(infoStr), "UDP %d > %d", src_port, dest_port);
-            newPacket.info = infoStr;
+            if (src_port == 53 || dest_port == 53) {
+                 const uint8_t* dns_data = packet + sizeof(EthernetHeader) + ip_header_len + sizeof(UDPHeader);
+                const DNSHeader* dns = reinterpret_cast<const DNSHeader*>(dns_data);
+
+                uint16_t flags = ntohs(dns->flags);
+                bool is_response = (flags & 0x8000) != 0;
+
+                const uint8_t* query_name = dns_data + sizeof(DNSHeader);
+                std::string domain = "";
+
+                int i = 0;
+                while (query_name[i] != 0 && i < 255) {
+                    int len = query_name[i];
+                    if ((len & 0xC0) == 0xC0) {
+                        domain += "<compressed>";
+                        break;
+                    }
+                    i++;
+                    for (int j = 0; j < len; j++) {
+                        domain += static_cast<char>(query_name[i+j]);
+                    }
+                    i += len;
+                    if (query_name[i] != 0) domain += ".";
+                }
+
+                char infoStr[128];
+                snprintf(infoStr, sizeof(infoStr), "UDP %s : %s", is_response ? "Response" : "Query",
+                domain.empty() ? "Unknown" : domain.c_str());
+                newPacket.info = infoStr;
+            } else {
+                char infoStr[64];
+                snprintf(infoStr, sizeof(infoStr), "UDP %d > %d", src_port, dest_port);
+                newPacket.info = infoStr;
+            }
         }
         else if (ip->protocol == 1) newPacket.info = "ICMP (Ping)";
         else newPacket.info = "Unknown IP Payload";
@@ -94,3 +125,10 @@ void CaptureThreadFunc() {
     }
     pcap_close(handle);
 }
+
+
+/*\
+
+
+
+ */

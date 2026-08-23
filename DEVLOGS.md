@@ -64,3 +64,27 @@ This tool is still not feeling like a nearly illeagal spy tool, so decided to ad
 - so basically we build a raw packet byte by byte and fire it with `pcap_inject()`
 
 - ok, so i failed to build this AR spoofer for now because it is way more complex than I thought it is as I don't have much time for this project, so I will be completing other features and I will come back to this feature if I have some time left
+
+
+
+# Devlog 6
+
+## UI
+- The UI really needed changes, a bad UI destroys a good functionality
+- I shifted to light grey theme insted of black, its more readable and looks good
+- I created Tabs at the top of application to access different tools that i am going to add later on
+- Also added resize ability to the different sections of the packet analyzer
+
+## Banger
+- *DNS Parsing:* extracted the actual domain names instead of just plain ip address and raw packet data
+- DNS runs on UDP (User Datagram Protocol), which is basically a super fast way for communication, by deafault action on port 53
+### AAaaa My Web Development Skill coming in the picture
+- Also the domains names are not stored as just plain text, its like some their length + name combo
+- simple Pointer arithmatic and string processing gets the job done. EASY EASY
+
+## Another Banger
+- *Filters:* i tried to see what will happen if i reload the website and saw about 1000 new packets, it was prettry clear we need searching and filtering options
+- added and dedicated dropdown and input field for filtering and searching
+
+> NEXT : i am thinking of way to save the live monitored data and see later,also if can extract more about req, like POST, GET, etc
+![img_2.png](img_2.png)
