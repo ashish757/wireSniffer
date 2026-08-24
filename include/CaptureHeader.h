@@ -26,12 +26,18 @@ struct CapturedPacket {
 };
 
 
-extern std::vector<CapturedPacket> g_packetList;
+extern std::vector<CapturedPacket> g_livePacketList;
+extern std::vector<CapturedPacket> g_filePacketList;
+
 extern std::mutex g_packetMutex;
 extern bool g_isCapturing;
 
 void packetHandler(u_char *userDta, const struct pcap_pkthdr *pkthdr, const u_char *packet);
 void CaptureThreadFunc();
+void saveCaptureToFile(const std::string& fileName);
+bool loadCaptureFromFile(const std:: string& filename);
+
+
 
 
 

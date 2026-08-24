@@ -7,14 +7,14 @@
 #include "CaptureHeader.h"
 #include "InjectionEngine.h"
 #include "cstring"
+#include <filesystem>
+#include <cstring>
+
 
 class UIManager {
-public:
-    void Render();
-
 private:
     float packetListHeight = 350.0f;
-    void DrawPacketList();
+    void DrawPacketList(const std::vector<CapturedPacket>& packetList);
     void DrawDetailsPane();
     void DrawHexDumpPane();
     void DrawInjectionPane();
@@ -28,7 +28,24 @@ private:
 
     std::string injectionStatus;
     char filterBuffer[256] = "";
-    int seletedFilterIndex = 0;
+    int selectedFilterIndex = 0;
+
+    char savePathBuffer[512];
+    char loadPathBuffer[512];
+
+public:
+    UIManager() {
+        std::string currentPath = std::filesystem::current_path().string();
+        std::string defaultFile =  currentPath + "/session.pcap";
+
+        std::strncpy(savePathBuffer, defaultFile.c_str(), sizeof(savePathBuffer) -1);
+        savePathBuffer[sizeof(savePathBuffer) - 1] = '\0';
+
+        std::strncpy(loadPathBuffer, defaultFile.c_str(), sizeof(loadPathBuffer) -1);
+        loadPathBuffer[sizeof(loadPathBuffer) - 1] = '\0';
+    }
+    void Render();
+
 };
 
 #endif //WIRESNIFFER_UIMANAGER_H

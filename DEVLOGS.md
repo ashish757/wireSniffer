@@ -88,3 +88,29 @@ This tool is still not feeling like a nearly illeagal spy tool, so decided to ad
 
 > NEXT : i am thinking of way to save the live monitored data and see later,also if can extract more about req, like POST, GET, etc
 ![img_2.png](img_2.png)
+
+
+
+
+# Devlog 7
+### WELL A LOT HAPPENED THIS TIME
+
+
+## HTTP Parsing
+- Parsed HTTP section of the packet (not SSL/HTTPS, that's encrypted sir!!!) so you wont get any packets of HTTP as you are unlikely to visit one most of the traffic is TLS/SSL, try `curl http://neverssl.com`
+- so basically i check for ascii string for GET adn POST
+
+## saving the packets info
+- i just learned that professional network monitors have features to save the current monitoring session to a file
+- it is .pcap (Packet Capture) file, which stores the data of packets for later reference
+- Its simple take the current list of packets info, dump it in the `.pcap` file with the help of `pcap_dump` function
+- Also implemented a feature to load the .pcap files
+
+- Right now you need to enter the file location manually as the standard c++ doesnt have that feature to open native OS file dialogue, it can be done by adding another library, but i want to avoid adding heavy unnecessary libraries
+- also a quick note on how fwrite failed to crete such file, due to unknown file error, so jy first approach was with fwrite and after that i learned about pcap_dump()
+
+## CenterPiece
+- Redesigned the architecture, as the current one only shows the live packets but we also need to save and load the files.
+- so now we have to sections, i made another one to simple show the saved packet details, so that one can compare the past data with the live feed.
+
+![img_3.png](img_3.png)

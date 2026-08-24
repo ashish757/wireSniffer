@@ -2,13 +2,18 @@
 #include <iostream>
 #include <arpa/inet.h>
 
-std::vector<CapturedPacket> g_packetList;
+std::vector<CapturedPacket> g_livePacketList;
+std::vector<CapturedPacket> g_filePacketList;
+
 std::mutex g_packetMutex;
 bool g_isCapturing = true;
 
 int g_packetCount = 1;
 
 void packetHandler(u_char *userDta, const struct pcap_pkthdr *pkthdr, const u_char *packet) {
+
+    auto* targetList = reinterpret_cast<std::vector<CapturedPacket>*>(userDta);
+
     const EthernetHeader* eth = reinterpret_cast<const EthernetHeader*>(packet);
     uint16_t eth_type = ntohs(eth->type);
 
@@ -137,7 +142,7 @@ void packetHandler(u_char *userDta, const struct pcap_pkthdr *pkthdr, const u_ch
     newPacket.rawData.assign(packet, packet + pkthdr->caplen);
 
     std::lock_guard<std::mutex> lock(g_packetMutex);
-    g_packetList.push_back(newPacket);
+    targetList->push_back(newPacket);
 }
 
 void CaptureThreadFunc() {
@@ -151,8 +156,85 @@ void CaptureThreadFunc() {
     }
 
     while (g_isCapturing) {
-        pcap_dispatch(handle, 10, packetHandler, nullptr);
+        pcap_dispatch(handle, 10, packetHandler, reinterpret_cast<u_char*>(&g_livePacketList));
     }
     pcap_close(handle);
 }
+
+void saveCaptureToFile(const std::string& filename) {
+    std::lock_guard<std::mutex> lock(g_packetMutex);
+
+    pcap_t* dead_handle = pcap_open_dead(DLT_EN10MB, 65535);
+    if (!dead_handle) {
+        std::cerr<<"could not open file to write "<<filename<<std::endl;
+        return;
+    }
+
+    pcap_dumper_t* dumper = pcap_dump_open(dead_handle, filename.c_str());
+    if (!dumper) {
+        std::cerr<<"could not open file to write "<<filename<<std::endl;
+        pcap_close(dead_handle);
+        return;
+    }
+
+    struct pcap_file_header {
+        uint32_t magic;
+        uint16_t version_major;
+        uint16_t version_minor;
+        int32_t thiszone;
+        uint32_t sigfigs;
+        uint32_t snaplen;
+        uint32_t network;
+    } header;
+
+    header.magic = 0xa1b1c2c3d4;
+    header.version_major = 2;
+    header.version_minor = 3;
+    header.thiszone = 0;
+    header.sigfigs = 0;
+    header.snaplen = 34234;
+    header.network = 1;
+
+
+    for (const auto& p: g_livePacketList) {
+        struct pcap_pkthdr p_hdr;
+
+        p_hdr.ts.tv_sec = 0;
+        p_hdr.ts.tv_usec = 0;
+        p_hdr.caplen = p.rawData.size();
+        p_hdr.len = p.length;
+
+       pcap_dump(reinterpret_cast<u_char*>(dumper), &p_hdr, p.rawData.data());
+    }
+
+    pcap_dump_close(dumper);
+    pcap_close(dead_handle);
+    std::cout<<"successfully saved capture "<<g_livePacketList.size()<<" packets to "<<filename<<std::endl;
+
+}
+
+
+bool loadCaptureFromFile(const std::string& filename) {
+    char errbuf[PCAP_ERRBUF_SIZE];
+
+
+    pcap_t* handle = pcap_open_offline(filename.c_str(), errbuf);
+
+    if (handle == nullptr) {
+        std::cerr<<"Error in loading  the file: "<<errbuf<<std::endl;
+        return false;
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(g_packetMutex);
+        g_filePacketList.clear();
+        g_packetCount = 1;
+    }
+
+    pcap_loop(handle, 0, packetHandler, reinterpret_cast<u_char*>(&g_filePacketList));
+
+    pcap_close(handle);
+    std::cout<<"loaded capture from "<<filename<<std::endl;
+}
+
 

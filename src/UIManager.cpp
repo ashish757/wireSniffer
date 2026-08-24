@@ -33,27 +33,32 @@ void UIManager::Render() {
 
     if (ImGui::BeginTabBar("MainTabs")) {
 
-
-
-        if (ImGui::BeginTabItem("Traffic Analyzer")) {
-
+        if (ImGui::BeginTabItem("Live Traffic")) {
             const char* filterOptions[] = {"All", "DNS", "TCP", "UDP", "ARP", "HTTP"};
             ImGui::SetNextItemWidth(120.0f);
-            if (ImGui::Combo("###ProtocolCombo", &seletedFilterIndex, filterOptions, IM_ARRAYSIZE(filterOptions))) {
-                if (seletedFilterIndex == 0) filterBuffer[0] = '\0';
-                else if (seletedFilterIndex == 1) snprintf(filterBuffer, sizeof(filterBuffer), "DNS");
-                else if (seletedFilterIndex == 2) snprintf(filterBuffer, sizeof(filterBuffer), "TCP");
-                else if (seletedFilterIndex == 3) snprintf(filterBuffer, sizeof(filterBuffer), "UDP");
-                else if (seletedFilterIndex == 4) snprintf(filterBuffer, sizeof(filterBuffer), "ARP");
-                else if (seletedFilterIndex == 5) snprintf(filterBuffer, sizeof(filterBuffer), "HTTP");
+            if (ImGui::Combo("###ProtocolCombo", &selectedFilterIndex, filterOptions, IM_ARRAYSIZE(filterOptions))) {
+                if (selectedFilterIndex == 0) filterBuffer[0] = '\0';
+                else if (selectedFilterIndex == 1) snprintf(filterBuffer, sizeof(filterBuffer), "DNS");
+                else if (selectedFilterIndex == 2) snprintf(filterBuffer, sizeof(filterBuffer), "TCP");
+                else if (selectedFilterIndex == 3) snprintf(filterBuffer, sizeof(filterBuffer), "UDP");
+                else if (selectedFilterIndex == 4) snprintf(filterBuffer, sizeof(filterBuffer), "ARP");
+                else if (selectedFilterIndex == 5) snprintf(filterBuffer, sizeof(filterBuffer), "HTTP");
             }
             ImGui::SameLine();
 
             ImGui::SetNextItemWidth(-1);
             ImGui::InputTextWithHint("##Filter", "Filter packets (e.g., DNS, IPv4, 192.168, Google)...", filterBuffer, sizeof(filterBuffer));
-            ImGui::Spacing();
+
+            ImGui::SetNextItemWidth(700.0f);
+            ImGui::InputText("##SavePath", savePathBuffer, sizeof(savePathBuffer));
+            ImGui::SameLine();
+
+            if (ImGui::Button("save to disk")) {
+                saveCaptureToFile(savePathBuffer);
+            }
+
             ImGui::BeginChild("PacketListPane", ImVec2(0, packetListHeight), true);
-            DrawPacketList();
+            DrawPacketList(g_livePacketList);
             ImGui::EndChild();
 
             ImGui::InvisibleButton("v_splitter", ImVec2(-1, 8.0f));
@@ -69,6 +74,47 @@ void UIManager::Render() {
             ImGui::EndTabItem();
         }
 
+
+      if (ImGui::BeginTabItem("File Analysis")) {
+            ImGui::SetNextItemWidth(700.0f);
+            ImGui::InputText("##LoadPath", loadPathBuffer, sizeof(loadPathBuffer));
+            ImGui::SameLine();
+            if (ImGui::Button("Load PCAP File")) {
+                loadCaptureFromFile(loadPathBuffer);
+            }
+
+            const char* filterOptions[] = {"All", "DNS", "TCP", "UDP", "ARP", "HTTP"};
+            ImGui::SetNextItemWidth(120.0f);
+            if (ImGui::Combo("###OfflineProtocolCombo", &selectedFilterIndex, filterOptions, IM_ARRAYSIZE(filterOptions))) {
+                if (selectedFilterIndex == 0) filterBuffer[0] = '\0';
+                else if (selectedFilterIndex == 1) snprintf(filterBuffer, sizeof(filterBuffer), "DNS");
+                else if (selectedFilterIndex == 2) snprintf(filterBuffer, sizeof(filterBuffer), "TCP");
+                else if (selectedFilterIndex == 3) snprintf(filterBuffer, sizeof(filterBuffer), "UDP");
+                else if (selectedFilterIndex == 4) snprintf(filterBuffer, sizeof(filterBuffer), "ARP");
+                else if (selectedFilterIndex == 5) snprintf(filterBuffer, sizeof(filterBuffer), "HTTP");
+            }
+            ImGui::SameLine();
+
+            ImGui::SetNextItemWidth(-1);
+            ImGui::InputTextWithHint("##OfflineFilter", "Filter packets...", filterBuffer, sizeof(filterBuffer));
+            ImGui::Spacing();
+
+            ImGui::BeginChild("OfflinePacketListPane", ImVec2(0, packetListHeight), true);
+            DrawPacketList(g_filePacketList);
+            ImGui::EndChild();
+
+            ImGui::InvisibleButton("v_splitter_offline", ImVec2(-1, 8.0f));
+            if (ImGui::IsItemHovered()) ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+            if (ImGui::IsItemActive()) packetListHeight += io.MouseDelta.y;
+
+            ImGui::Columns(2, "OfflineBottomPanes");
+            DrawDetailsPane();
+            ImGui::NextColumn();
+            DrawHexDumpPane();
+            ImGui::Columns(1);
+
+            ImGui::EndTabItem();
+        }
         if (ImGui::BeginTabItem("Active Tools")) {
             DrawInjectionPane();
             ImGui::EndTabItem();
@@ -81,7 +127,7 @@ void UIManager::Render() {
 }
 
 
-void UIManager::DrawPacketList() {
+void UIManager::DrawPacketList(const std::vector<CapturedPacket>& packetList) {
     if (ImGui::BeginTable("PacketTable", 7, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollY, ImVec2(0.0f, 0.0f))) {
 
         ImGui::TableSetupScrollFreeze(0, 1);
@@ -97,7 +143,7 @@ void UIManager::DrawPacketList() {
         std::lock_guard<std::mutex> lock(g_packetMutex);
         std::string filterStr = filterBuffer;
 
-        for (const auto& packet: g_packetList) {
+        for (const auto& packet: packetList) {
 
             if (!filterStr.empty()) {
                 bool match = false;
