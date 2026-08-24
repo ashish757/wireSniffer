@@ -114,3 +114,19 @@ This tool is still not feeling like a nearly illeagal spy tool, so decided to ad
 - so now we have to sections, i made another one to simple show the saved packet details, so that one can compare the past data with the live feed.
 
 ![img_3.png](img_3.png)
+
+# Devlog 8
+probably the final one, as project deadline was cut to 24 aug from 1st sep.
+actually i had to rush here, as the deadline was really close
+
+### And this devlog is also A LOT HAPPNED THIS TIME (PART 2)
+- So basically my point was to detect if someone does a Nmap scan
+- but now i am just simulating it due to time constraint 
+
+I think I will just say it out. I made some UI improvement, specifically the contrast side because the imgui is really bad at designing things. 
+- there were some pointer arithmetic over there
+- I also redesigned the details pane where I displayed more details of packets. 
+The main point was that I mentioned above is scanning and looking for an nmap scan, which I am leaving uncompleted as I no longer have time to do it. 
+- Other than this, I think in one of my commits, I actually pushed code which was actually meant to be included in devlog 8, but it was pushed earlier  I am sorry for that
+- NOW I WILL WRITE SOME README I GUESS
+- and also now i need to turn this into a executable , which i will do
