@@ -23,6 +23,7 @@ struct CapturedPacket {
     int length;
     std::string info;
     std::vector<uint8_t> rawData;
+    std::string payload;
 };
 
 

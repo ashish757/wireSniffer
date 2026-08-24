@@ -53,6 +53,22 @@ void packetHandler(u_char *userDta, const struct pcap_pkthdr *pkthdr, const u_ch
             const uint8_t* tcp_payload = packet + sizeof(EthernetHeader) + ip_header_len + tcp_header_len;
             int payload_len = pkthdr->caplen - (sizeof(EthernetHeader) + ip_header_len + tcp_header_len);
 
+            if (payload_len > 0) {
+                std::string extracted_data;
+                extracted_data.reserve(payload_len);
+
+                for (int i =0; i<payload_len; i++) {
+                    char c = tcp_payload[i];
+
+                    if ((c >= 32 && c <= 126) || c =='\n' || c == '\r' || c == '\t') {
+                        extracted_data += c;
+                    } else {
+                        extracted_data += '.';
+                    }
+                }
+                newPacket.payload = extracted_data;
+            }
+
             std::string http_info = "";
 
             if (payload_len > 4) {

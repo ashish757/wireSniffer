@@ -245,8 +245,32 @@ void UIManager::DrawDetailsPane() {
     ImGui::Separator();
 
     if (selectedPacketId != -1) {
-        ImGui::Text("Frame Length: %d bytes", selectedPacketData.length);
-        ImGui::Text("Captured on Interface: en0");
+        if (!selectedPacketData.payload.empty()) {
+            ImGui::TextColored(ImVec4(0.8f, 0.4f, 0.0f, 1.0f), "[!] EXFILTRATED PAYLOAD: ");
+
+            ImGui::BeginChild("PayloadScrollRegion", ImVec2(0, ImGui::GetContentRegionAvail().y - 10), true);
+            ImGui::TextWrapped("%s", selectedPacketData.payload.c_str());
+            ImGui::EndChild();
+        } else {
+            ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "No plaintext payload found");
+        }
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        ImGui::TextColored(ImVec4(0.4f, 0.4f, 0.4f, 1.0f), "--- METADATA ---");
+        ImGui::Text("Packet ID:     %d", selectedPacketData.id);
+        ImGui::Text("Timestamp:     %s", selectedPacketData.time.c_str());
+        ImGui::Text("Protocol:      %s", selectedPacketData.protocol.c_str());
+        ImGui::Text("Source:        %d", selectedPacketData.length);
+        ImGui::Spacing();
+
+        ImGui::TextColored(ImVec4(0.4f, 0.4f, 0.4f, 1.0f), "--- ROUTING ---");
+        ImGui::Text("Source:     %s", selectedPacketData.source.c_str());
+        ImGui::Spacing();
+
+        ImGui::TextColored(ImVec4(0.4f, 0.4f, 0.4f, 1.0f), "--- SIGNATURE / BEHAVIOUR");
+        ImGui::TextWrapped("%s", selectedPacketData.info.c_str());
+
     } else {
         ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "Select a packet to view details");
     }
