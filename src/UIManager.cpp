@@ -120,6 +120,57 @@ void UIManager::Render() {
             ImGui::EndTabItem();
         }
 
+       if (ImGui::BeginTabItem("Offensive Intel")) {
+
+            if (isUnderAttack) {
+                ImGui::TextColored(ImVec4(0.8f, 0.0f, 0.0f, 1.0f), "[!] RECON ALERT: TARGET SURFACE EXPOSED");
+            } else {
+                ImGui::TextColored(ImVec4(0.0f, 0.6f, 0.0f, 1.0f), "[*] PASSIVE RECON: MAPPING TARGET ENVIRONMENT");
+            }
+
+            ImGui::Separator();
+            ImGui::Spacing();
+
+            if (ImGui::Button("Simulate Target Recon Probe", ImVec2(250, 30))) {
+                SimulateAttack();
+            }
+
+            ImGui::Spacing();
+
+            ImGui::Text("Active Strike & Recon Log:");
+            ImGui::BeginChild("ThreatListPane", ImVec2(0,0), true);
+
+            if (ImGui::BeginTable("ThreatTable", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable)) {
+                ImGui::TableSetupColumn("Source Origin");
+                ImGui::TableSetupColumn("Target Victim");
+                ImGui::TableSetupColumn("Protocol");
+                ImGui::TableSetupColumn("Attack Vector / Signature");
+                ImGui::TableHeadersRow();
+
+                for (const auto& threat: threatLog) {
+                    ImGui::TableNextRow();
+
+                    ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImGui::GetColorU32(ImVec4(1.0f, 0.85f, 0.85f, 1.0f)));
+
+                    ImGui::TableSetColumnIndex(0);
+                    ImGui::TextColored(ImVec4(0.8f, 0.0f, 0.0f, 1.0f), "%s", threat.source.c_str());
+
+                    ImGui::TableSetColumnIndex(1);
+                    ImGui::Text("%s", threat.destination.c_str());
+
+                    ImGui::TableSetColumnIndex(2);
+                    ImGui::Text("%s", threat.protocol.c_str());
+
+                    ImGui::TableSetColumnIndex(3);
+                    ImGui::TextColored(ImVec4(0.8f, 0.4f, 0.0f, 1.0f), "%s", threat.info.c_str());
+                }
+                ImGui::EndTable();
+            }
+
+            ImGui::EndChild();
+            ImGui::EndTabItem();
+        }
+
         ImGui::EndTabBar();
     }
 
@@ -287,5 +338,23 @@ void UIManager::DrawInjectionPane() {
     if (!injectionStatus.empty()) {
         ImGui::Separator();
         ImGui::TextWrapped("Status: %s", injectionStatus.c_str());
+    }
+}
+
+void UIManager::SimulateAttack() {
+    isUnderAttack = true;
+    threatLog.clear();
+
+    for (int i =0; i<10;i++) {
+        CapturedPacket threat;
+        threat.id = 9990+i;
+        threat.time = "Live";
+        threat.source = "185.15.59.22 (Region: Eastern Europe)";
+        threat.destination = "192.168.1.100 (Local)";
+        threat.protocol = "TCP";
+        threat.length = 60;
+        threat.info = "[THREAT: PORT SCAN] SYN Packet to Port " + std::to_string(20 + i);
+
+        threatLog.push_back(threat);
     }
 }

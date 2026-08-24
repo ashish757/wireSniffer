@@ -18,6 +18,7 @@ private:
     void DrawDetailsPane();
     void DrawHexDumpPane();
     void DrawInjectionPane();
+    void SimulateAttack();
 
     int selectedPacketId = -1;
     CapturedPacket selectedPacketData;
@@ -32,6 +33,10 @@ private:
 
     char savePathBuffer[512];
     char loadPathBuffer[512];
+
+    std::vector<CapturedPacket> threatLog;
+    bool isUnderAttack = false;
+
 
 public:
     UIManager() {
