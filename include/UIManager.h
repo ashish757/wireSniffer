@@ -19,7 +19,7 @@ private:
     void DrawHexDumpPane();
     void DrawInjectionPane();
 
-    int sele?/ctedPacketId = -1;
+    int selectedPacketId = -1;
     CapturedPacket selectedPacketData;
 
     char targetInBuffer[16] = "";

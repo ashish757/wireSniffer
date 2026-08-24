@@ -37,7 +37,7 @@ void UIManager::Render() {
 
         if (ImGui::BeginTabItem("Traffic Analyzer")) {
 
-            const char* filterOptions[] = {"All", "DNS", "TCP", "UDP", "ARP"};
+            const char* filterOptions[] = {"All", "DNS", "TCP", "UDP", "ARP", "HTTP"};
             ImGui::SetNextItemWidth(120.0f);
             if (ImGui::Combo("###ProtocolCombo", &seletedFilterIndex, filterOptions, IM_ARRAYSIZE(filterOptions))) {
                 if (seletedFilterIndex == 0) filterBuffer[0] = '\0';
@@ -45,6 +45,7 @@ void UIManager::Render() {
                 else if (seletedFilterIndex == 2) snprintf(filterBuffer, sizeof(filterBuffer), "TCP");
                 else if (seletedFilterIndex == 3) snprintf(filterBuffer, sizeof(filterBuffer), "UDP");
                 else if (seletedFilterIndex == 4) snprintf(filterBuffer, sizeof(filterBuffer), "ARP");
+                else if (seletedFilterIndex == 5) snprintf(filterBuffer, sizeof(filterBuffer), "HTTP");
             }
             ImGui::SameLine();
 

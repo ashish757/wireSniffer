@@ -44,14 +44,44 @@ void packetHandler(u_char *userDta, const struct pcap_pkthdr *pkthdr, const u_ch
             uint16_t src_port = ntohs(tcp->src_port);
             uint16_t dest_port = ntohs(tcp->dest_port);
 
-            bool is_syn = (tcp->flags & 0x02) != 0;
-            bool is_ack = (tcp->flags & 0x10) != 0;
+            int tcp_header_len = ((tcp->data_offset >> 4) & 0x0F) * 4;
+            const uint8_t* tcp_payload = packet + sizeof(EthernetHeader) + ip_header_len + tcp_header_len;
+            int payload_len = pkthdr->caplen - (sizeof(EthernetHeader) + ip_header_len + tcp_header_len);
 
-            char infoStr[64];
-            snprintf(infoStr, sizeof(infoStr), "TCP %d > %d [%s%s]",
-                src_port, dest_port, is_syn ? "SYN " : "", is_ack ? "ACK " : ""
-            );
-            newPacket.info = infoStr;
+            std::string http_info = "";
+
+            if (payload_len > 4) {
+                std::string payload_str(reinterpret_cast<const char*>(tcp_payload), std::min(payload_len, 200));
+
+                if (payload_str.rfind("GET ", 0) == 0 || payload_str.rfind("POST ", 0) == 0 || payload_str.rfind("HTTP/", 0) ==0 ) {
+                    size_t newline_pos = payload_str.find("\r\n");
+                    if (newline_pos == std::string::npos) newline_pos = payload_str.find('\n');
+                    if (newline_pos != std::string::npos) {
+                        http_info = "HTTP:" + payload_str.substr(0, newline_pos);
+                    } else {
+                        http_info = "HTTP: Traffic";
+                    }
+                }
+
+             }
+
+            if (!http_info.empty()) {
+                newPacket.protocol = "HTTP";
+
+                newPacket.info = http_info;
+            } else {
+                bool is_syn = (tcp->flags & 0x02) != 0;
+                bool is_ack = (tcp->flags & 0x10) != 0;
+
+                char infoStr[64];
+                snprintf(infoStr, sizeof(infoStr), "TCP %d > %d [%s%s]",
+                    src_port, dest_port, is_syn ? "SYN " : "", is_ack ? "ACK " : ""
+                );
+                newPacket.info = infoStr;
+            }
+
+
+
         }
         else if (ip->protocol == 17) {
             const UDPHeader* udo = reinterpret_cast<const UDPHeader*>(packet + sizeof(EthernetHeader) + ip_header_len);
@@ -126,9 +156,3 @@ void CaptureThreadFunc() {
     pcap_close(handle);
 }
 
-
-/*\
-
-
-
- */
