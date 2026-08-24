@@ -2,25 +2,16 @@ name: C++ CMake Build Pipeline
 
 on:
   push:
+    branches: [ "main", "master" ]
   workflow_dispatch:
 
 jobs:
   build:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-
-    runs-on: ${{ matrix.os }}
+    runs-on: macos-latest
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-
-      - name: Install Linux Dependencies
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libpcap-dev libglfw3-dev libgl1-mesa-dev xorg-dev
 
       - name: Configure CMake
         run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release
@@ -31,7 +22,7 @@ jobs:
       - name: Upload Executable Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: WireSniffer-${{ matrix.os }}
+          name: WireSniffer-macOS
           path: |
             ${{github.workspace}}/build/WireSniffer
             ${{github.workspace}}/build/*.app
