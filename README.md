@@ -34,8 +34,8 @@ sudo /Users/ashish/Downloads/WireSniffer
 
 ## Installing Guide video
 it can be difficult if you have never worked on mac before, or you are new to it, so heres a guide for isntallation
-
-<video src="./installation_guide.mp4" ></video>
+### Video link
+[https://drive.google.com/file/d/1_kwvSRbJ_UrPwoQ2mft-J8agpFNP5q1r/view?usp=sharing](https://drive.google.com/file/d/1_kwvSRbJ_UrPwoQ2mft-J8agpFNP5q1r/view?usp=sharing)
 
 
 # Tech Stack
