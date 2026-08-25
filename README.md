@@ -4,7 +4,7 @@ wireSniffer is high performance, system level network analyzer built entirely in
 
 ![img_4.png](img_4.png)
 
-### If you want project specifications and details please read (DEVLOG.md)(./DEVLOG.ms)
+### If you want project specifications and details please read [DEVLOGS.md](./DEVLOGS.md)
 
 # Features
 - Data Exfiltration Engine: Real-time extraction and plaintext of TCP payloads (HTTP/DNS), automatically masking binary noise to reveal intercepted targets.
@@ -25,19 +25,22 @@ Apple will flag my application as unsafe as i dont have $99 to buy apple develop
 But as my app monitors network packets, it requires sudo previleges
 so if you run the application normally it wont trace anything
 so instead run the application with sudo
-`sudo /Users/ashish/Downloads/WireSniffer`
+
+```bash
+sudo /Users/ashish/Downloads/WireSniffer
+```
 
 ### Tested on macOS Tahoe - 26, may or may not work on older version, i did not have much time to test.
 
 ## Installing Guide video
-i can be difficult if you have never worked on mac before, or you are new to it, so heres a guide for isntallation
+it can be difficult if you have never worked on mac before, or you are new to it, so heres a guide for isntallation
 
-
+<video src="./installation_guide.mp4" ></video>
 
 
 # Tech Stack
 - C++
-- Dear ImGui & DLFW -> for GUI
+- Dear ImGui & GLFW -> for GUI
 - libcap -> for capturing the packets and .pcap file I/O
 - CMake and github actions
 
